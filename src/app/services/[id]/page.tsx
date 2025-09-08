@@ -2,24 +2,25 @@
 import { notFound } from "next/navigation";
 import { getService, services } from "../../../lib/services";
 
-type Props = { params: { id: string } };
+type Params = { id: string };
+type Props = { params: Promise<Params> }; // 👈 params asíncrono (Next 15)
 
-// Pre-render estático de cada servicio (SSG)
 export function generateStaticParams() {
   return services.map(s => ({ id: s.id }));
 }
 
-// Metadata por servicio
-export function generateMetadata({ params }: Props) {
-  const svc = getService(params.id);
+export async function generateMetadata({ params }: Props) {
+  const { id } = await params; // 👈 await
+  const svc = getService(id);
   return {
     title: svc ? `${svc.name} | Servicios` : "Servicio no encontrado",
-    description: svc?.summary ?? "Detalle de servicio"
+    description: svc?.summary ?? "Detalle de servicio",
   };
 }
 
-export default function ServiceDetail({ params }: Props) {
-  const svc = getService(params.id);
+export default async function ServiceDetail({ params }: Props) {
+  const { id } = await params; // 👈 await
+  const svc = getService(id);
   if (!svc) return notFound();
 
   return (
